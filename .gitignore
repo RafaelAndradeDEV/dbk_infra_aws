@@ -1,0 +1,29 @@
+# Terraform files
+.terraform/
+.terraform.*
+terraform.tfstate
+terraform.tfstate.*
+crash.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraformrc
+terraform.rc
+
+# Local environment files
+*.tfvars
+*.tfvars.json
+
+# Editors
+.vscode/
+.idea/
+
+# TFLint cache
+.tflint.d/
+
+# pre-commit caches (local)
+.pre-commit-config.yaml.bak
+
+/references
+.env

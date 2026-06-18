@@ -37,7 +37,7 @@ jobs:
         run: |
           case "${{ inputs.target }}" in
             infra)
-              echo "stacks=stacks/00_bootstrap stacks/01_infra" >> "$GITHUB_OUTPUT"
+              echo "stacks=stacks/01_infra" >> "$GITHUB_OUTPUT"
               ;;
             databricks)
               echo "stacks=stacks/02_account_principals stacks/03_uc_metastore stacks/04_databricks_workspaces" >> "$GITHUB_OUTPUT"
@@ -46,7 +46,7 @@ jobs:
               echo "stacks=stacks/04_databricks_workspaces" >> "$GITHUB_OUTPUT"
               ;;
             all)
-              echo "stacks=stacks/00_bootstrap stacks/01_infra stacks/02_account_principals stacks/03_uc_metastore stacks/04_databricks_workspaces" >> "$GITHUB_OUTPUT"
+              echo "stacks=stacks/01_infra stacks/02_account_principals stacks/03_uc_metastore stacks/04_databricks_workspaces" >> "$GITHUB_OUTPUT"
               ;;
           esac
 

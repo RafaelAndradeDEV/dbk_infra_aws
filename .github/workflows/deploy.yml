@@ -17,7 +17,6 @@ env:
   TERRAFORM_VERSION: "1.13.3"
   TFLINT_VERSION: "v0.50.0"
   STACKS: >-
-    stacks/00_bootstrap
     stacks/01_infra
     stacks/02_account_principals
     stacks/03_uc_metastore

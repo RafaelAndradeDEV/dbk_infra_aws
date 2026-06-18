@@ -1,0 +1,37 @@
+formatter: markdown table
+
+# Recursively generate docs for submodules when run at repo root
+recursive:
+  enabled: true
+  path: stacks
+  include-main: true
+
+output:
+  file: TF_README.md
+  mode: replace
+
+sections:
+  show:
+    - header
+    - requirements
+    - providers
+    - modules
+    - resources
+    - inputs
+    - outputs
+    - footer
+
+settings:
+  anchor: true
+  default: true
+  description: true
+  escape: true
+  hide-empty: true
+  html: false
+  indent: 2
+  required: true
+  sensitive: true
+
+sort:
+  enabled: true
+  by: name

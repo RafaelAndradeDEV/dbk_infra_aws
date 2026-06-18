@@ -1,0 +1,13 @@
+{
+    "terminal.integrated.profiles.linux": {
+        "bash (with .env)": {
+            "path": "/bin/bash",
+            "args": ["-c", "set -a; [ -f ${workspaceFolder}/.env ] && source ${workspaceFolder}/.env; set +a; exec bash"]
+        },
+        "zsh (with .env)": {
+            "path": "/usr/bin/zsh",
+            "args": ["-c", "set -a; [ -f ${workspaceFolder}/.env ] && source ${workspaceFolder}/.env; set +a; exec zsh"]
+        }
+    },
+    "terminal.integrated.defaultProfile.linux": "bash (with .env)"
+}

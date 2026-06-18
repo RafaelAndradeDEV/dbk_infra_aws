@@ -1,0 +1,118 @@
+# Workspace configuration
+
+workspaces:
+  ##########################################################
+  # Sandbox Workspace
+  ##########################################################
+  - name: project-sandbox
+    dev_catalog_name: project_dev_db
+    budget_amount: 200
+    budget_notification_emails:
+      - rafaelandradeoli05@gmail.com
+    cluster_tags:
+      Workspace: sandbox
+      Team: project
+    all_purpose_clusters:
+      - name: "project-dbk-shared"
+        min_workers: 1
+        max_workers: 5
+        autotermination_minutes: 15
+    sql_endpoint_tags:
+      Workspace: sandbox
+      Team: project
+    sql_warehouses:
+      - name: "project-sandbox-sql-wh"
+        cluster_size: "2X-Small"
+        max_num_clusters: 1
+    catalogs:
+      - name: project_dev_db
+        isolation_mode: ISOLATED
+        purpose: Project Development catalog
+      - name: project_qa_db
+        isolation_mode: ISOLATED
+        purpose: Project QA catalog
+      - name: project_prod_db
+        isolation_mode: ISOLATED
+        purpose: Project Production catalog
+    schemas:
+      - name: raw
+        catalogs: [project_dev_db, project_qa_db, project_prod_db]
+      - name: staging
+        catalogs: [project_dev_db, project_qa_db, project_prod_db]
+      - name: intermediate
+        catalogs: [project_dev_db, project_qa_db, project_prod_db]
+      - name: mart
+        catalogs: [project_dev_db, project_qa_db, project_prod_db]
+    external_locations:
+      - name: project_core_prod
+        url: s3://project-dbk-coreprod-bucket/
+        credential_name: project-dbk-uc-prod-access
+        comment: Core prod external location
+        enable_file_events: true
+      - name: project_core_dev
+        url: s3://project-dbk-coredev-bucket/
+        credential_name: project-dbk-uc-dev-access
+        comment: Core dev external location
+        enable_file_events: true
+    storage_credential_names:
+      - project-dbk-uc-prod-access
+      - project-dbk-uc-dev-access
+    groups:
+      - name: project-sandbox-admins
+        assignments:
+          workspace_permissions: ["ADMIN"]
+          catalog_privileges:
+            - catalog_name: project_dev_db
+              privileges: ["ALL_PRIVILEGES", "MANAGE"]
+            - catalog_name: project_qa_db
+              privileges: ["ALL_PRIVILEGES", "MANAGE"]
+            - catalog_name: project_prod_db
+              privileges: ["ALL_PRIVILEGES", "MANAGE"]
+            - catalog_name: system
+              privileges: ["USE_CATALOG", "USE_SCHEMA", "SELECT"]
+          cluster_privileges:
+            - cluster_name: project-dbk-shared
+              privileges: ["CAN_MANAGE"]
+          sql_warehouse_privileges:
+            - warehouse_name: project-sandbox-default-sql-wh
+              privileges: ["CAN_MANAGE"]
+            - warehouse_name: project-sandbox-sql-wh
+              privileges: ["CAN_MANAGE"]
+          external_location_privileges:
+            - external_location_name: project_core_prod
+              privileges: ["ALL_PRIVILEGES"]
+            - external_location_name: project_core_dev
+              privileges: ["ALL_PRIVILEGES"]
+          storage_credential_privileges:
+            - storage_credential_name: project-dbk-uc-prod-access
+              privileges: ["ALL_PRIVILEGES"]
+            - storage_credential_name: project-dbk-uc-dev-access
+              privileges: ["ALL_PRIVILEGES"]
+      - name: project-sandbox-users
+        assignments:
+          workspace_permissions: ["USER"]
+          catalog_privileges:
+            - catalog_name: project_dev_db
+              privileges: ["ALL_PRIVILEGES"]
+            - catalog_name: project_qa_db
+              privileges: ["USE_CATALOG", "USE_SCHEMA", "SELECT"]
+            - catalog_name: project_prod_db
+              privileges: ["USE_CATALOG", "USE_SCHEMA"]
+          schema_privileges:
+            - schema_name: raw
+              catalog_name: project_prod_db
+              privileges: ["USE_SCHEMA", "SELECT"]
+            - schema_name: staging
+              catalog_name: project_prod_db
+              privileges: ["USE_SCHEMA", "SELECT"]
+            - schema_name: mart
+              catalog_name: project_prod_db
+              privileges: ["USE_SCHEMA", "SELECT"]
+          cluster_privileges:
+            - cluster_name: project-dbk-shared
+              privileges: ["CAN_RESTART"]
+          sql_warehouse_privileges:
+            - warehouse_name: project-sandbox-default-sql-wh
+              privileges: ["CAN_USE"]
+            - warehouse_name: project-sandbox-sql-wh
+              privileges: ["CAN_USE"]

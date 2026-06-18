@@ -1,0 +1,16 @@
+account_principals:
+  service_principals: []
+
+  groups:
+    - name: project-sandbox-admins
+      description: admins for project-external-sandbox workspace
+    - name: project-sandbox-users
+      description: users for project-external-sandbox workspace
+
+  users:
+    - name: Rafael Andrade
+      email: rafaelandradeoli05@gmail.com
+      allow_cluster_create: true
+      groups:
+        - project-sandbox-admins
+        - project-sandbox-users

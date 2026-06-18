@@ -1,0 +1,51 @@
+project_name: project-dbk-infra-east
+aws_region: us-east-2
+aws_profile: default
+databricks_account_id: 6ef106a3-1a71-41fe-86dd-304b4047b8b1
+env: prod
+
+# Used in private backend setup (not used in this project by default)
+# Reference: https://docs.databricks.com/aws/en/resources/ip-domain-region#privatelink-vpc-endpoint-services
+workspace_endpoint_service: ""
+cluster_relay_endpoint_service: ""
+service_direct_endpoint_service: ""
+
+backend_state_bucket_name: project-dbk-infra-east-tfstate
+
+# VPC configuration
+vpc_config:
+  already_created: false
+  vpc_id: ""
+
+# Metastore configuration
+metastore_config:
+  metastore_bucket_name: project-dbk-uc-metastore
+  metastore_name: project-dbk-uc-us-east-2-metastore
+  reuse_metastore: false
+
+default_tags:
+  Owner: Rafael.Andrade
+  Project: Dbk-Project
+  ManagedBy: "Rafael-Team"
+
+# Networking settings
+network:
+  cidr_block: 10.20.0.0/16
+
+# Account admin group name
+account_configs:
+  admin_group: project-dbk-admins
+
+# Unity Catalog storage credentials (optional)
+# Each entry creates one databricks_storage_credential and (optionally) its S3 bucket.
+storage_credential_configs:
+  core_prod:
+    name: project-dbk-uc-prod-access
+    bucket_name: project-dbk-coreprod-bucket
+    create_bucket: true
+    prefix: "*"
+  core_dev:
+    name: project-dbk-uc-dev-access
+    bucket_name: project-dbk-coredev-bucket
+    create_bucket: true
+    prefix: "*"

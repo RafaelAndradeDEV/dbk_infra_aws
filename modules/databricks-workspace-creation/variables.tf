@@ -1,0 +1,10 @@
+variable "workspace_name" { type = string }
+variable "prefix" { type = string }
+variable "region" { type = string }
+variable "databricks_account_id" { type = string }
+variable "databricks_credentials_id" { type = string }
+variable "databricks_storage_configuration_id" { type = string }
+variable "security_group_ids" { type = list(string) }
+variable "private_subnet_ids" { type = list(string) }
+variable "vpc_id" { type = string }
+variable "tags" { type = map(string) }

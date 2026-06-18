@@ -1,0 +1,112 @@
+# ============================================================================
+# Targeted Deploy Pipeline
+# Manual trigger for deploying specific stack groups
+# ============================================================================
+
+name: Deploy (targeted)
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: "Which stacks to deploy"
+        required: true
+        type: choice
+        options:
+          - infra
+          - databricks
+          - workspaces
+          - all
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  TERRAFORM_VERSION: "1.13.3"
+  TFLINT_VERSION: "v0.50.0"
+
+jobs:
+  resolve-stacks:
+    name: Resolve target stacks
+    runs-on: ubuntu-latest
+    outputs:
+      stacks: ${{ steps.resolve.outputs.stacks }}
+    steps:
+      - id: resolve
+        run: |
+          case "${{ inputs.target }}" in
+            infra)
+              echo "stacks=stacks/00_bootstrap stacks/01_infra" >> "$GITHUB_OUTPUT"
+              ;;
+            databricks)
+              echo "stacks=stacks/02_account_principals stacks/03_uc_metastore stacks/04_databricks_workspaces" >> "$GITHUB_OUTPUT"
+              ;;
+            workspaces)
+              echo "stacks=stacks/04_databricks_workspaces" >> "$GITHUB_OUTPUT"
+              ;;
+            all)
+              echo "stacks=stacks/00_bootstrap stacks/01_infra stacks/02_account_principals stacks/03_uc_metastore stacks/04_databricks_workspaces" >> "$GITHUB_OUTPUT"
+              ;;
+          esac
+
+  lint:
+    name: Terraform fmt + TFLint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
+
+      - name: Install TFLint
+        run: |
+          curl -sSLo /tmp/tflint.zip "https://github.com/terraform-linters/tflint/releases/download/${{ env.TFLINT_VERSION }}/tflint_linux_amd64.zip"
+          unzip -o /tmp/tflint.zip -d /usr/local/bin
+
+      - name: Terraform fmt check
+        run: terraform fmt -check -recursive
+
+      - name: TFLint
+        run: tflint --recursive
+
+  plan-and-apply:
+    name: Plan + Apply (${{ inputs.target }})
+    runs-on: ubuntu-latest
+    needs: [resolve-stacks, lint]
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Terraform plan + apply
+        env:
+          DATABRICKS_CLIENT_ID: ${{ secrets.DATABRICKS_CLIENT_ID }}
+          DATABRICKS_CLIENT_SECRET: ${{ secrets.DATABRICKS_CLIENT_SECRET }}
+          TARGET_STACKS: ${{ needs.resolve-stacks.outputs.stacks }}
+        run: |
+          set -euo pipefail
+          for stack in $TARGET_STACKS; do
+            echo "==> PLAN: ${stack}"
+            ( cd "${stack}" && terraform init -input=false && terraform plan -no-color -out=tfplan.out | tee plan.log )
+            echo "==> APPLY: ${stack}"
+            ( cd "${stack}" && terraform apply -auto-approve -no-color tfplan.out )
+          done
+
+      - name: Upload plan logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: plan-logs-${{ inputs.target }}
+          path: stacks/*/plan.log
+          retention-days: 14

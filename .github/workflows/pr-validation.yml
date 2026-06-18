@@ -1,0 +1,122 @@
+# ============================================================================
+# PR Validation Pipeline
+# Runs lint, validate, and informational plan on all pull requests
+# ============================================================================
+
+name: PR Validation
+
+on:
+  pull_request:
+    branches: [master]
+
+permissions:
+  id-token: write
+  contents: read
+  pull-requests: write
+
+env:
+  TERRAFORM_VERSION: "1.13.3"
+  TFLINT_VERSION: "v0.50.0"
+  STACKS: >-
+    stacks/00_bootstrap
+    stacks/01_infra
+    stacks/02_account_principals
+    stacks/03_uc_metastore
+    stacks/04_databricks_workspaces
+
+jobs:
+  lint:
+    name: Terraform fmt + TFLint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
+
+      - name: Install TFLint
+        run: |
+          curl -sSLo /tmp/tflint.zip "https://github.com/terraform-linters/tflint/releases/download/${{ env.TFLINT_VERSION }}/tflint_linux_amd64.zip"
+          unzip -o /tmp/tflint.zip -d /usr/local/bin
+
+      - name: Terraform fmt check
+        run: terraform fmt -check -recursive
+
+      - name: TFLint
+        run: tflint --recursive
+
+  validate:
+    name: Validate stacks
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
+
+      - name: Validate all stacks
+        run: |
+          set -euo pipefail
+          for stack in ${{ env.STACKS }}; do
+            echo "==> VALIDATE: ${stack}"
+            ( cd "${stack}" && terraform init -backend=false && terraform validate -no-color )
+          done
+
+  plan:
+    name: Terraform plan (informational)
+    runs-on: ubuntu-latest
+    needs: validate
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Terraform plan (all stacks)
+        env:
+          DATABRICKS_CLIENT_ID: ${{ secrets.DATABRICKS_CLIENT_ID }}
+          DATABRICKS_CLIENT_SECRET: ${{ secrets.DATABRICKS_CLIENT_SECRET }}
+        run: |
+          FAILED_STACKS=""
+
+          for stack in ${{ env.STACKS }}; do
+            echo ""
+            echo "============================================================"
+            echo "==> PLAN: ${stack}"
+            echo "============================================================"
+            if ( cd "${stack}" && terraform init -input=false && terraform plan -no-color 2>&1 | tee plan.log ); then
+              echo "Plan succeeded for ${stack}"
+            else
+              echo "Plan failed for ${stack} (continuing...)"
+              FAILED_STACKS="${FAILED_STACKS} ${stack}"
+            fi
+          done
+
+          echo ""
+          echo "============================================================"
+          echo "==> PLAN SUMMARY"
+          echo "============================================================"
+          if [ -n "$FAILED_STACKS" ]; then
+            echo "Some stacks failed to plan:${FAILED_STACKS}"
+            echo "This is informational only - the step will not fail."
+          else
+            echo "All stacks planned successfully"
+          fi
+
+      - name: Upload plan logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: plan-logs-pr
+          path: stacks/*/plan.log
+          retention-days: 7

@@ -6,26 +6,27 @@
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >=1.13.1 |
 | <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 6.14.1 |
 | <a name="requirement_databricks"></a> [databricks](#requirement\_databricks) | >= 1.90.0 |
+| <a name="requirement_time"></a> [time](#requirement\_time) | >= 0.13.1 |
 
 ## Providers
 
 | Name | Version |
 |------|---------|
-| <a name="provider_databricks.mws"></a> [databricks.mws](#provider\_databricks.mws) | 1.117.0 |
+| <a name="provider_databricks.mws"></a> [databricks.mws](#provider\_databricks.mws) | 1.102.0 |
+| <a name="provider_terraform"></a> [terraform](#provider\_terraform) | n/a |
 
 ## Modules
 
 | Name | Source | Version |
 |------|--------|---------|
-| <a name="module_account_principals_managed"></a> [account\_principals\_managed](#module\_account\_principals\_managed) | ../../modules/account-principals-managed | n/a |
 | <a name="module_project_data"></a> [project\_data](#module\_project\_data) | ../../modules/project_data | n/a |
+| <a name="module_sandbox_workspace_creation"></a> [sandbox\_workspace\_creation](#module\_sandbox\_workspace\_creation) | ../../modules/databricks-workspace-creation | n/a |
+| <a name="module_sandbox_workspace_setup"></a> [sandbox\_workspace\_setup](#module\_sandbox\_workspace\_setup) | ../../modules/databricks-workspace-setup | n/a |
 
 ## Resources
 
 | Name | Type |
 |------|------|
-| [databricks_group.admins](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/group) | resource |
-| [databricks_group_role.my_group_account_admin](https://registry.terraform.io/providers/databricks/databricks/latest/docs/resources/group_role) | resource |
 
 ## Inputs
 

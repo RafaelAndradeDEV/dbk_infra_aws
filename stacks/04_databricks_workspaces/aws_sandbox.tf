@@ -55,3 +55,4 @@ module "sandbox_workspace_setup" {
 
   federated_catalogs = try(module.project_data.workspaces[local.sandbox_workspace_name].federated_catalogs, [])
 }
+    

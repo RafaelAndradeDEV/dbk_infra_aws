@@ -23,7 +23,7 @@ module "unity_catalog" {
   metastore_bucket               = module.project_data.metastore_config.metastore_bucket_name
   storage_configuration_role_arn = data.terraform_remote_state.infra.outputs.storage_configuration_role_arn
   reuse_metastore                = module.project_data.metastore_config.reuse_metastore
-  existing_metastore_id          = module.project_data.metastore_config.reuse_metastore ? "00000000-0000-0000-0000-000000000000" : null
+  existing_metastore_id          = module.project_data.metastore_config.reuse_metastore ? var.existing_metastore_id : null
 }
 
 output "metastore_id" {

@@ -28,3 +28,6 @@ terraform.rc
 /references
 .env
 *.tfstate
+
+# Local AI assistant context (not versioned)
+CLAUDE.md

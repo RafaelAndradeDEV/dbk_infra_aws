@@ -13,11 +13,14 @@ data "databricks_aws_crossaccount_policy" "this" {
   policy_type = "customer"
 }
 
+# Optional: allow the cross-account role to pass specific roles (e.g. a CI/ECR agent role).
 data "aws_iam_policy_document" "extra_policy" {
+  count = length(var.extra_pass_role_arns) > 0 ? 1 : 0
+
   statement {
     effect    = "Allow"
     actions   = ["iam:PassRole"]
-    resources = ["arn:aws:iam::123456789012:role/PipelineAgentDatabricksECR"]
+    resources = var.extra_pass_role_arns
   }
 }
 
@@ -28,9 +31,10 @@ resource "aws_iam_role_policy" "this" {
 }
 
 resource "aws_iam_role_policy" "extra_policy" {
+  count  = length(var.extra_pass_role_arns) > 0 ? 1 : 0
   name   = "${var.prefix}-extra-policy"
   role   = aws_iam_role.cross_account_role.id
-  policy = data.aws_iam_policy_document.extra_policy.json
+  policy = data.aws_iam_policy_document.extra_policy[0].json
 }
 
 resource "time_sleep" "wait_for_group_creation" {

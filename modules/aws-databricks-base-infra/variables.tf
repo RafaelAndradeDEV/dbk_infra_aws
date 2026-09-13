@@ -113,3 +113,9 @@ variable "private_access_public_access_enabled" {
   description = "When using Private Access Settings, allow public access to the workspace URL. Set to false only if you have front-end PrivateLink/VPN for users and Terraform."
   default     = true
 }
+
+variable "extra_pass_role_arns" {
+  type        = list(string)
+  description = "(Optional) IAM role ARNs the cross-account role may pass (iam:PassRole), e.g. a CI agent role used for custom container images. Empty disables the extra policy."
+  default     = []
+}

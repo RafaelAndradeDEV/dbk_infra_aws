@@ -63,7 +63,7 @@ variable "budget_amount" {
 variable "budget_notification_emails" {
   type        = list(string)
   description = "List of emails to receive cost alerts"
-  default     = ["budget-alerts@example.com", "budget-alerts@example.com", "budget-alerts@example.com"]
+  default     = []
 }
 
 variable "ai_gateway_budget_amount" {

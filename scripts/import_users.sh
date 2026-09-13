@@ -1,41 +1,32 @@
 #!/bin/bash
+# Import existing per-developer schemas (dev_<name>) into Terraform state.
+#
+# Usage:
+#   Run from stacks/04_databricks_workspaces (after `terraform init`).
+#   Set CATALOG and MODULE below, and list the users exactly as their
+#   display names appear in configs/principal_configs.yml.
+#
+# Resource address (map key is the user's DISPLAY NAME):
+#   module.<module>.module.databricks_workspace_configuration.databricks_schema.dev_schemas["<Display Name>"]
+# Import ID is "<catalog>.<schema>", where the schema is the display name
+# lower-cased with non-alphanumerics replaced by "_" (e.g. "Ada Lovelace" -> dev_ada_lovelace).
 
-# Script to import existing Databricks schemas into Terraform state
-# Assumes:
-# - Catalog name: project_dev_db
-# - Terraform resource address prefix: module.workspace_setup.module.databricks_workspace_configuration.databricks_schema.dev_schemas
-# - Run this in the directory where terraform apply is typically run (e.g., where your .tf files are)
-# - Terraform is installed and configured with the necessary providers/state
+set -euo pipefail
 
-# Map of schema names to user full names
-declare -A schema_to_user=(
-  ["dev_example_user"]="Example User"
-  ["dev_example_user"]="Example User"
-  ["dev_example_user"]="Example User"
-  ["dev_example_user"]="Example User"
-  ["dev_example_user"]="Example User"
-  ["dev_example_user"]="Example User"
-  ["dev_example_user"]="Example User"
-  ["dev_example_user"]="Example User"
-  ["dev_example_user"]="Example User"
-  ["dev_example_user"]="Example User"
-  ["dev_example_user"]="Example User"
+CATALOG="project_dev_db"
+MODULE="sandbox_workspace_setup"
+
+users=(
+  "Ada Lovelace"
+  # "Another User"
 )
 
-# Catalog name (adjust if different for your workspace)
-CATALOG="project_dev_db"
+for user in "${users[@]}"; do
+  schema="dev_$(echo "$user" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9]+/_/g; s/^_+|_+$//g')"
+  resource_address="module.$MODULE.module.databricks_workspace_configuration.databricks_schema.dev_schemas[\"$user\"]"
 
-# Loop over the schemas and run terraform import
-for schema in "${!schema_to_user[@]}"; do
-  user="${schema_to_user[$schema]}"
-  resource_address="module.workspace_setup.module.databricks_workspace_configuration.databricks_schema.dev_schemas[\"$user\"]"
-  import_id="$CATALOG.$schema"
-
-  echo "Importing schema for $user: $import_id"
-  terraform import "$resource_address" "$import_id"
-
-  # Optional: Add a short delay to avoid rate limiting if needed
-  # sleep 1
+  echo "Importing schema for '$user': $CATALOG.$schema"
+  terraform import "$resource_address" "$CATALOG.$schema"
 done
 
-echo "All imports completed. Run 'terraform plan' to verify."
+echo "All imports completed. Run 'terraform plan' to verify (expect no changes)."

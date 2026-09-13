@@ -8,7 +8,7 @@ This module creates an S3 bucket configured for use with Databricks, including:
 
 ## Usage
 
-```hcl
+```
 module "storage_bucket" {
   source = "./storage_bucket"
 
@@ -32,7 +32,7 @@ module "storage_bucket" {
 
 ## Multiple Buckets Example
 
-```hcl
+```
 module "analytics_bucket" {
   source = "./storage_bucket"
 
